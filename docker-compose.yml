@@ -1,0 +1,44 @@
+version: '3.8'  # Utilize uma versão mais recente do Compose se necessário
+
+services:
+  rocketchat:
+    image: rocketchat/rocket.chat:6.7.0
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/rocketchat
+      - ROOT_URL=http://localhost:3000
+      - PORT=3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:4.4
+    volumes:
+      - mongo_data:/data/db
+
+  rasa:
+    image: rasa/rasa:3.6.19-full
+    volumes:
+      - ./rasa:/app
+    ports:
+      - '5005:5005'
+    command:
+      - run
+      - --enable-api
+      - --cors
+      - "*"
+
+  adapter:
+    build: .
+    ports:
+      - '5002:5002'
+    depends_on:
+      - rasa
+
+volumes:
+  mongo_data:
+
+networks:
+  default:
+    name: chat-bot-support-bp
